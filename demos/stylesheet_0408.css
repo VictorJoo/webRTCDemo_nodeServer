@@ -1,0 +1,136 @@
+/* Fonts Copyright (C) 2011-2017 Hoefler & Co.*/
+
+
+html, body, section, ul, li, nav, a, h1, h2 {
+    padding: 0;
+    margin: 0;
+    outline: none;
+    text-shadow: none;
+    box-shadow: none;
+    border-radius: 0;
+    text-decoration: none;
+}
+
+body {
+    font-family: "Whitney SSm A", "Whitney SSm B", "Lato", "Lucida Grande", "Lucida Sans Unicode", Tahoma, Sans-Serif;
+    font-size: 17px;
+    line-height: 1.5em;
+}
+
+h1 {
+    font-size: 25px;
+    text-align: center;
+    color: #38a8e0;
+    padding: 20px;
+}
+
+h1 p {
+    font-size: 17px;
+    font-weight: normal;
+}
+
+h2 {
+    font-size: 22px;
+}
+
+.logo {
+    float: left;
+    margin-right: 20px;
+    display: block;
+}
+
+.logo img {
+    height: 55px;
+}
+
+nav {
+    margin-top: 17px;
+    text-align: right;
+}
+
+header {
+    height: 50px;
+}
+
+section, header, footer {
+    padding: 0;
+}
+
+ul li, nav li {
+    list-style: none;
+    display: inline-block;
+}
+
+a {
+    margin: 0 10px;
+}
+
+a, h2 {
+    color: #EC008C;
+}
+
+a:hover {
+    color: #671345;
+}
+
+.highlighted {
+    color: #EC008C;
+}
+
+.make-center {
+  text-align: center;
+}
+
+button {
+  -moz-box-shadow:inset 0px 39px 0px -24px #e67a73;
+  -webkit-box-shadow:inset 0px 39px 0px -24px #e67a73;
+  box-shadow:inset 0px 39px 0px -24px #e67a73;
+  background-color:#e4685d;
+  -moz-border-radius:4px;
+  -webkit-border-radius:4px;
+  border-radius:4px;
+  border:1px solid #ffffff;
+  display:inline-block;
+  cursor:pointer;
+  color:#ffffff;
+  padding:6px 15px;
+  text-decoration:none;
+  text-shadow:0px 1px 0px #b23e35;
+}
+button:hover {
+  background-color:#eb675e;
+}
+button:active {
+  position:relative;
+  top:1px;
+}
+
+button[disabled], input[disabled] {
+  background: transparent!important;
+  box-shadow: none!important;
+  text-shadow: none!important;
+  color: #dcd7d7!important;
+  border-color: #dcd7d7!important;
+  cursor: not-allowed!important;
+}
+
+.admin-view .room-wrap {margin:0; }
+.admin-view .room-wrap video {width:100% !important; height:100%}
+.admin-view .media-container {width:100% !important}
+
+/* .room-wrap {padding: 150px 58px 0 64px;} */
+.room-wrap:after {content:""; clear:both; display:block}
+.room-users {float:left; width : 100%;height: 623px; box-sizing:border-box}
+.room-users img {width: 100%;height: inherit;}
+.room-item-info  {width:100%; float:left; height: 100%; box-sizing:border-box}
+.room-list {float:left;width:15%; height: 623px; box-sizing:border-box; border-right:2px solid gray}
+.romm-item-button{float:left;width:40%; height: 623px; box-sizing:border-box }
+.main-header {border-bottom:2px solid black; display :block}
+/*.face-desk {float:left;width:43%; height: 623px; box-sizing:border-box; }
+.file-desk {float:left;width:42%; height: 623px; box-sizing:border-box; }*/
+
+.front-view .face-desk-wrap {margin: 7% 2.5%; background: #fff; border-radius: 30px; overflow: hidden;}
+.front-view .face-desk-wrap .room-users {position:relative; top:5px}
+.front-view .face-desk-wrap .room-item-info {color:#000}
+
+.media-controls {display:none;}

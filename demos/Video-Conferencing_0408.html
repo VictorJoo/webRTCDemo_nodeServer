@@ -1,0 +1,421 @@
+﻿
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8">
+    <title>Video Conferencing using RTCMultiConnection</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <link rel="shortcut icon" href="/demos/logo.png">
+    <link rel="stylesheet" type="text/css" href="/demos/stylesheet_0408.css">
+     <!--drag & drop-->
+    <script src="/demos/js/jquery-1.11.0.min.js"></script>
+    <script src="/demos/js/jquery-ui.min.js"></script>
+</head>
+<body>
+    <section class="make-center" id="ssss">
+        <div class="main-header" style="background-color:''; height: 70px">
+
+        </div>
+
+        <div class="room-wrap">
+            <div class="room-list" id="romm-list" style="">
+                <table id="room-table"  style="width: 100%">
+                  
+                </table>
+                <ol id="public-rooms" style="text-align:left;"></ol>
+            </div>
+            <div calss="face-desk" id="face-desk" style="float:left;width:41%; padding-left: 1%">
+                <div style="float:left; width: 100%">
+                     <p style="float:left; width: 100%" >
+                        상담 화면
+                         <button id="btn_disconnect" disabled style="width:20%; float:right;">연결종료</button>
+                    </p>
+                </div>
+                <div class="room-users" id="room-urls">
+                </div>
+            </div>
+            <div calss="file-desk" id="file-desk" style="float:left;width:42%;">
+                <div style="float:left; width: 100%">
+                    <p style="float:left; width: 100%">
+                        제품 정보
+                        <button id="share-file" disabled style="float:right;  margin-right: 2%">제품 Upload</button>
+                    </p>
+                </div>
+                <div class="room-item-info" id="room-item-info"  style="height: 600px;">
+						 <!-- <img id="dropped" />  -->
+				</div>
+				<!-- <div class="drop" id="drop"> -->
+					<!-- <img id="dropped"/> -->
+				<!-- </div> -->
+        </div>
+        <div id="videos-container"></div>
+        <div id="chat-container">
+            <div id="file-container">
+
+            </div>
+            <div class="chat-output"></div>
+        </div>
+    </section>
+
+    <!-- list make -->
+    <div>
+
+
+    </div>
+
+    <script src="/dist/RTCMultiConnection.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+     <script src="/demos/js/FileBufferReader.js"></script> 
+    <!-- custom layout for HTML5 audio/video elements -->
+    <script src="/demos/js/getMediaElement.js"></script>
+    <script>
+
+        // ......................................................
+        // .......................UI Code........................
+        // ......................................................
+        //ó�� ������ �ε��ؼ� ���� ������ ����� ���� ������ ����
+        var checkOner = false;
+        var roomidno = window.location.search.substring(8).replace(/(^\s*)|(\s*$)/gi, "");;
+        var isPublicModerator = true;
+        var checkRoomid = '';
+        var check_RoomState = false;
+		var check_VideoAudio = false;
+        function getuserId() {
+
+            if (roomidno != "") {
+                //���� ����
+                connection.open(roomidno, isPublicModerator);
+
+                createidno = roomidno;
+                //���
+                checkOner = true;
+                var adddiv = document.getElementById("room-urls");
+                adddiv.innerHTML = "<img class='testimgsize' src='logo_image/theface.png'>";
+                document.getElementById("share-file").style.display = "none";
+
+                document.getElementsByClassName("room-list")[0].remove();
+                document.getElementById("btn_disconnect").remove();
+                document.getElementsByClassName("main-header")[0].remove();
+                //document.getElementsByClassName("room-wrap")[0].style.margin = "5%";
+				document.getElementsByClassName("room-wrap")[0].classList.add("face-desk-wrap");
+                document.getElementById("face-desk").style.width = "40%";
+                document.getElementById("face-desk").style.paddingTop = "3%";
+
+                document.getElementById("file-desk").style.width = "54%";
+                document.getElementById("file-desk").style.paddingLeft = "5%";
+                document.getElementById("file-desk").style.paddingTop = "3%";
+
+                document.getElementsByTagName('p')[0].remove();
+                document.getElementsByTagName('p')[0].remove();
+
+                document.getElementById("room-item-info").innerHTML = "<div id='txtinput' style='font-size: 6em; margin-top: 28%;' >연결 중 입니다.</div>";
+
+            } else {
+                var main_header = document.getElementsByClassName("main-header")[0];
+                main_header.style.background = "linear-gradient( to left, green, white )";
+                var img = document.createElement("img");
+                var img2 = document.createElement("img");
+                img.setAttribute('style', 'float: right !important; height: 80%;margin-top : 10px');
+                img2.setAttribute('style', 'float: left !important; height: 80%; margin-top : 10px;margin-left: 10px');
+                img.src = "logo_image/logo(38).png";
+                img2.src = "logo_image/Logo_beecast_blue.png";
+                main_header.appendChild(img);
+                main_header.appendChild(img2);
+
+            }
+
+        };
+
+        // ......................................................
+        // ..................RTCMultiConnection Code.............
+        // ......................................................
+
+        var connection = new RTCMultiConnection();
+        var publicRoomsDiv = document.getElementById('room-table');
+
+        document.getElementById("btn_disconnect").onclick = function () {
+            window.location.reload();
+        }
+
+        //file share===========================================
+        document.getElementById('share-file').onclick = function () {
+		
+            var notuser = true;
+         var fileSelector = new FileSelector(); 
+             fileSelector.selectSingleFile(function (file) { 
+			 alert(file);
+                connection.send(file); 
+            });
+            if (!checkOner) {
+                //document.getElementById('room-item-info').setAttribute("style", "width:400px");
+            }
+        };
+
+        var chatContainer = document.querySelector('.chat-output');
+        function appendDIV(event) {
+		
+            var div = document.createElement('div');
+            div.innerHTML = event.data || event;
+            chatContainer.insertBefore(div, chatContainer.firstChild);
+            div.tabIndex = 0;
+            div.focus();
+        }
+        //file share===========================================
+
+
+
+        // by default, socket.io server is assumed to be deployed on your own URL
+        connection.socketURL = 'https://192.168.10.110:8543/';
+
+        // comment-out below line if you do not have your own socket.io server
+        // connection.socketURL = 'https://rtcmulticonnection.herokuapp.com:443/';
+
+        connection.socketMessageEvent = 'video-conference-demo';
+
+        connection.enableFileSharing = true; // by default, it is "false".
+
+        connection.session = {
+            audio: true,
+            video: true,
+            data: true
+        };
+
+        connection.sdpConstraints.mandatory = {
+            OfferToReceiveAudio: true,
+            OfferToReceiveVideo: true
+        };
+
+        ////////////////////////////////////////////////
+        connection.onmessage = appendDIV;
+        connection.filesContainer = document.getElementById('room-item-info');
+        connection.onopen = function () {
+            if (checkOner == false) {
+                document.getElementById('share-file').disabled = false;
+                document.getElementById('btn_disconnect').disabled = false;
+            }
+        };
+        /////////////////////////////////////////////////
+
+
+        connection.videosContainer = document.getElementById('room-urls');
+        connection.onstream = function (event) {
+			check_VideoAudio = true;
+            var width = parseInt(connection.videosContainer.clientWidth / 2) - 20;
+            var mediaElement = getMediaElement(event.mediaElement, {
+                title: event.userid,
+                buttons: ['full-screen'],
+                width: width,
+                showOnMouseEnter: false
+            });
+
+            if (checkOner == false) {
+                if (checkRoomid == event.userid) {
+                    connection.videosContainer.appendChild(mediaElement);
+                }
+            }
+            if (event.userid != roomidno) {
+				if(roomidno != ""){
+					document.getElementById("room-item-info").innerHTML = "<div id='txtinput' style='font-size: 6em; margin-top: 28%;' >안녕하세요.</div>";
+					document.getElementsByClassName("testimgsize")[0].remove();
+                   			 connection.videosContainer.appendChild(mediaElement);
+				}
+            }
+            setTimeout(function () {
+                mediaElement.media.play();
+            }, 10);
+
+            mediaElement.id = event.streamid;
+
+            if (document.getElementsByClassName("media-box").length) {
+                document.body.classList.add('admin-view');
+            } else {
+				document.body.classList.add('front-view');
+			}
+        };
+
+        connection.onstreamended = function (event) {
+            var mediaElement = document.getElementById(event.streamid);
+            if (mediaElement) {
+                mediaElement.parentNode.removeChild(mediaElement);
+            }
+	    if (checkOner) {
+		var adddiv = document.getElementById("room-urls");
+                adddiv.innerHTML = "<img class='endimage' src='logo_image/thefaceshop.jpg' style='width: 140%;'>";
+                document.getElementById("room-item-info").innerHTML = "<div id='txtinput' style='font-size: 6em; margin-top: 28%;' >감사합니다.</div>";
+		connection.closeSocket();
+                setTimeout(function () {
+                    window.location.reload();
+                }, 5000);
+            } else {
+                window.location.reload();
+            }
+			 
+        };
+        connection.maxParticipantsAllowed = 1;
+        connection.onRoomFull = function (roomid) {
+            connection.closeSocket();
+            connection.attachStreams.forEach(function (stream) {
+                stream.stop();
+            });
+
+            alert('상담중인 지점 입니다.');
+            window.location.reload();
+        };
+
+        (function looper() {
+
+            if (checkOner == false) {
+                var fir = document.createElement('tr');
+                fir.innerHTML = '<th> 지점 이름 </th> <th> 상담 상태 </th>';
+            }
+            // connection.getPublicModerators(startsWith, callback)
+            connection.getPublicModerators(function (array) {
+                publicRoomsDiv.innerHTML = '';
+                array.forEach(function (moderator) {
+                    // moderator.userid
+                    // moderator.extra
+                    if (moderator.userid == connection.userid) return; // if owner himself
+
+                    var li = document.createElement('li');
+                    li.innerHTML = '<b>' + moderator.userid + '</b>&nbsp;&nbsp;';
+
+                    
+                    var button = document.createElement('button');
+                    button.id = moderator.userid;
+                    button.onclick = function () {
+                        this.disabled = true;
+                        checkRoomid = this.id;
+                        connection.join(this.id);
+                        check_RoomState = true;
+
+                       
+                    };
+                    button.innerHTML = '상담 시작';
+                    //li.appendChild(button);
+
+                    mytable = document.getElementById('room-table');
+                    mycurrent_row = document.createElement("tr");
+                    mycurrent_cell = document.createElement("td");
+                    mycurrent_cell2 = document.createElement("td");
+                    currenttext = document.createTextNode(decodeURI(moderator.userid));
+                    mycurrent_cell.appendChild(currenttext);
+                    mycurrent_cell2.appendChild(button);
+
+                    if (!checkOner) {
+                        mytable.setAttribute("border", "1");
+                        mycurrent_row.insertBefore(mycurrent_cell2, mycurrent_row.firstChild);
+                        mycurrent_row.insertBefore(mycurrent_cell, mycurrent_row.firstChild);
+                        publicRoomsDiv.insertBefore(mycurrent_row, publicRoomsDiv.firstChild);
+                        publicRoomsDiv.insertBefore(fir, publicRoomsDiv.firstChild);
+                    }
+                    
+                   
+
+                    if (moderator.userid == connection.sessionid) {
+                        // if already connected with same moderator
+						if(check_VideoAudio){
+                        button.disabled = true;
+                        button.innerHTML = '상담 중';
+						}else{
+							alert('마이크를 연결해 주세요');
+							window.location.reload();
+						}
+                        
+                    }
+                    if (check_RoomState) {
+                        button.disabled = true;
+                    }
+
+                    
+                   
+                });
+                setTimeout(looper, 1000);
+            });
+        })();
+
+
+        function disableInputButtons() {
+            document.getElementById('open-or-join-room').disabled = true;
+            document.getElementById('open-room').disabled = true;
+            document.getElementById('join-room').disabled = true;
+            document.getElementById('room-id').disabled = true;
+        }
+
+        // ......................................................
+        // ......................Handling Room-ID................
+        // ......................................................
+
+        function showRoomURL(roomid) {
+            var roomHashURL = '#' + roomid;
+            var roomQueryStringURL = '?roomid=' + roomid;
+
+            var html = '<h2>Unique URL for your room:</h2><br>';
+
+            html += 'Hash URL: <a href="' + roomHashURL + '" target="_blank">' + roomHashURL + '</a>';
+            html += '<br>';
+            html += 'QueryString URL: <a href="' + roomQueryStringURL + '" target="_blank">' + roomQueryStringURL + '</a>';
+
+            var roomURLsDiv = document.getElementById('room-urls');
+            roomURLsDiv.innerHTML = html;
+
+            roomURLsDiv.style.display = 'block';
+        }
+
+        (function () {
+            var params = {},
+                r = /([^&=]+)=?([^&]*)/g;
+
+            function d(s) {
+                return decodeURIComponent(s.replace(/\+/g, ' '));
+            }
+            var match, search = window.location.search;
+            while (match = r.exec(search.substring(1)))
+                params[d(match[1])] = d(match[2]);
+            window.params = params;
+        })();
+
+        var roomid = '';
+
+        if (roomidno != "") {
+
+            if (localStorage.getItem(connection.socketMessageEvent)) {
+                //roomid = localStorage.getItem(connection.socketMessageEvent);
+
+                roomid = roomidno;
+                getuserId();
+            } else {
+                roomid = roomidno;
+                getuserId();
+                //roomid = connection.token();
+            }
+
+        } else {
+            getuserId();
+        }
+
+
+	 $(function(){	
+		$('#room-item-info').on({
+			'drop':function(e){
+				var f=e.originalEvent.dataTransfer.files[0];
+				var reader = new FileReader();
+							
+					connection.send(f);
+							
+				reader.readAsDataURL(f);
+				e.preventDefault();
+			},
+			'dragover':function(e){
+				e.preventDefault();
+			}
+		})
+	});
+    </script>
+
+    <footer>
+        <small id="send-message"></small>
+    </footer>
+
+    <script src="/demos/js/common.js"></script>
+</body>
+</html>
