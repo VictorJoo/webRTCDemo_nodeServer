@@ -6,7 +6,7 @@
 
 // Demo          - www.WebRTC-Experiment.com/getMediaElement
 
-document.write('<link rel="stylesheet" type="text/css" href="/demos/js/getMediaElement.css">');
+document.write('<link rel="stylesheet" type="text/css" href="/web/js/getMediaElement.css">');
 
 // __________________
 // getMediaElement.js
