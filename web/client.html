@@ -1,0 +1,214 @@
+
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8">
+    <title>Video Conferencing using RTCMultiConnection</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <link rel="shortcut icon" href="/web/logo.png">
+    <link rel="stylesheet" type="text/css" href="/web/stylesheet.css">
+    <!--drag & drop-->
+    <script src="/web/js/jquery-1.11.0.min.js"></script>
+    <script src="/web/js/jquery-ui.min.js"></script>
+		
+	 <style>
+		.face-desk{
+			width :40%;
+			paddingTop:3%;
+		}
+		.file-desk {
+			width : 54%;
+			paddingLeft : 5%;
+			paddingTop : 3%;
+		}
+	 
+	 </style>
+	
+	
+</head>
+<body>
+    <section class="make-center" id="ssss">
+        <div class="room-wrap face-desk-wrap">
+            <div calss="face-desk" id="face-desk" style="float:left;width:41%; padding-left: 1%">
+                <div style="float:left; width: 100%">
+                </div>
+                <div class="room-users" id="room-urls">
+					<img class='testimgsize' src='logo_image/theface.png'>
+                </div>
+            </div>
+            <div calss="file-desk" id="file-desk" style="float:left;width:42%;">
+                <div style="float:left; width: 100%">                    
+                </div>
+                <div class="room-item-info" id="room-item-info" style="height: 600px;">
+					<div id='txtinput' style='font-size: 6em; margin-top: 28%;' >연결 중 입니다.</div>
+                </div>                
+            </div>           
+        </div>
+        <div id="videos-container"></div>
+        <div id="chat-container">
+            <div id="file-container">
+
+            </div>
+            <div class="chat-output"></div>
+        </div>
+    </section>
+
+    <script src="/dist/RTCMultiConnection.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/web/js/FileBufferReader.js"></script>
+    <!-- custom layout for HTML5 audio/video elements -->
+    <script src="/web/js/getMediaElement.js"></script>
+
+    <script>
+
+        // ......................................................
+        // .......................UI Code........................
+        // ......................................................        
+        var roomidno = window.location.search.substring(8).replace(/(^\s*)|(\s*$)/gi, "");;
+        var isPublicModerator = true;
+        var checkRoomid = '';
+        var check_RoomState = false;
+        var check_VideoAudio = false;
+        function getuserId() {           
+			connection.open(roomidno, isPublicModerator);
+			createidno = roomidno;									
+        };
+
+        // ......................................................
+        // ..................RTCMultiConnection Code.............
+        // ......................................................
+
+        var connection = new RTCMultiConnection();
+          
+
+        //file share===========================================     
+
+        var chatContainer = document.querySelector('.chat-output');
+        function appendDIV(event) {
+            var div = document.createElement('div');
+            div.innerHTML = event.data || event;
+            chatContainer.insertBefore(div, chatContainer.firstChild);
+            div.tabIndex = 0;
+            div.focus();
+        }
+        //file share===========================================
+
+
+
+        // by default, socket.io server is assumed to be deployed on your own URL
+        connection.socketURL = 'https://192.168.10.110:8543/';
+
+        // comment-out below line if you do not have your own socket.io server
+        // connection.socketURL = 'https://rtcmulticonnection.herokuapp.com:443/';
+
+        connection.socketMessageEvent = 'video-conference-demo';
+
+        connection.enableFileSharing = true; // by default, it is "false".
+
+        connection.session = {
+            audio: true,
+            video: true,
+            data: true
+        };
+
+        connection.sdpConstraints.mandatory = {
+            OfferToReceiveAudio: true,
+            OfferToReceiveVideo: true
+        };
+
+        connection.onmessage = appendDIV;
+        connection.filesContainer = document.getElementById('room-item-info');
+        
+
+        connection.videosContainer = document.getElementById('room-urls');
+        connection.onstream = function (event) {
+            check_VideoAudio = true;
+            var width = parseInt(connection.videosContainer.clientWidth / 2) - 20;
+            var mediaElement = getMediaElement(event.mediaElement, {
+                title: event.userid,
+                buttons: ['full-screen'],
+                width: width,
+                showOnMouseEnter: false
+            });
+
+           
+            if (event.userid != roomidno) {
+                if (roomidno != "") {
+                    document.getElementById("room-item-info").innerHTML = "<div id='txtinput' style='font-size: 6em; margin-top: 28%;' >안녕하세요.</div>";
+                    
+					//on camera
+					//document.getElementsByClassName("testimgsize")[0].remove();
+                    //connection.videosContainer.appendChild(mediaElement);
+                }
+            }
+            setTimeout(function () {
+                mediaElement.media.play();
+            }, 10);
+
+            mediaElement.id = event.streamid;
+
+            if (document.getElementsByClassName("media-box").length) {
+                document.body.classList.add('admin-view');
+            } else {
+                document.body.classList.add('front-view');
+            }
+        };
+
+        connection.onstreamended = function (event) {
+
+            var mediaElement = document.getElementById(event.streamid);
+            if (mediaElement) {
+                mediaElement.parentNode.removeChild(mediaElement);
+            }
+            
+			var adddiv = document.getElementById("room-urls");
+			adddiv.innerHTML = "<img class='endimage' src='logo_image/thefaceshop.jpg' style='width: 100%;'>";
+			document.getElementById("room-item-info").innerHTML = "<div id='txtinput' style='font-size: 6em; margin-top: 28%;' >감사합니다.</div>";
+			connection.closeSocket();
+			setTimeout(function () {
+				window.location.reload();
+			}, 5000);
+           
+
+        };
+        connection.maxParticipantsAllowed = 1;
+        
+        // ......................................................
+        // ......................Handling Room-ID................
+        // ......................................................
+    
+        (function () {
+            var params = {},
+                r = /([^&=]+)=?([^&]*)/g;
+
+            function d(s) {
+                return decodeURIComponent(s.replace(/\+/g, ' '));
+            }
+            var match, search = window.location.search;
+            while (match = r.exec(search.substring(1)))
+                params[d(match[1])] = d(match[2]);
+            window.params = params;
+        })();
+
+        var roomid = '';
+
+        if (roomidno != "") {
+
+            if (localStorage.getItem(connection.socketMessageEvent)) {
+                roomid = roomidno;
+                getuserId();
+            } else {
+                roomid = roomidno;
+                getuserId();
+            }
+
+        } else {
+            getuserId();
+        }
+        
+    </script>
+
+
+    <script src="/web/js/common.js"></script>
+</body>
+</html>
