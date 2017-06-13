@@ -2,6 +2,9 @@
 // MIT License    - www.WebRTC-Experiment.com/licence
 // Documentation  - github.com/muaz-khan/RTCMultiConnection
 
+
+
+
 function resolveURL(url) {
     var isWin = !!process.platform.match(/^win/);
     if (!isWin) return url;
@@ -65,11 +68,11 @@ function serverHandler(request, response) {
         try {
             stats = fs.lstatSync(filename);
 
-            if (filename && filename.search(/web/g) === -1 && stats.isDirectory()) {
+            if (filename && filename.search(/demos/g) === -1 && stats.isDirectory()) {
                 response.writeHead(200, {
                     'Content-Type': 'text/html'
                 });
-                response.write('<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=/web/"></head><body></body></html>');
+                response.write('<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=/demos/"></head><body></body></html>');
                 response.end();
                 return;
             }
@@ -87,14 +90,14 @@ function serverHandler(request, response) {
                 'Content-Type': 'text/html'
             });
 
-            if (filename.indexOf(resolveURL('/web/MultiRTC/')) !== -1) {
-                filename = filename.replace(resolveURL('/web/MultiRTC/'), '');
-                filename += resolveURL('/web/MultiRTC/index.html');
-            } else if (filename.indexOf(resolveURL('/web/')) !== -1) {
-                filename = filename.replace(resolveURL('/web/'), '');
-                filename += resolveURL('/web/index.html');
+            if (filename.indexOf(resolveURL('/demos/MultiRTC/')) !== -1) {
+                filename = filename.replace(resolveURL('/demos/MultiRTC/'), '');
+                filename += resolveURL('/demos/MultiRTC/index.html');
+            } else if (filename.indexOf(resolveURL('/demos/')) !== -1) {
+                filename = filename.replace(resolveURL('/demos/'), '');
+                filename += resolveURL('/demos/index.html');
             } else {
-                filename += resolveURL('/web/index.html');
+                filename += resolveURL('/demos/index.html');
             }
         }
 
@@ -120,19 +123,19 @@ function serverHandler(request, response) {
             }
 
             try {
-                var web = (fs.readdirSync('web') || []);
+                var demos = (fs.readdirSync('demos') || []);
 
-                if (web.length) {
+                if (demos.length) {
                     var h2 = '<h2 style="text-align:center;display:block;"><a href="https://www.npmjs.com/package/rtcmulticonnection-v3"><img src="https://img.shields.io/npm/v/rtcmulticonnection-v3.svg"></a><a href="https://www.npmjs.com/package/rtcmulticonnection-v3"><img src="https://img.shields.io/npm/dm/rtcmulticonnection-v3.svg"></a><a href="https://travis-ci.org/muaz-khan/RTCMultiConnection"><img src="https://travis-ci.org/muaz-khan/RTCMultiConnection.png?branch=master"></a></h2>';
-                    var otherweb = '<section class="experiment" id="web"><details><summary style="text-align:center;">Check ' + (web.length - 1) + ' other RTCMultiConnection-v3 web</summary>' + h2 + '<ol>';
-                    web.forEach(function(f) {
+                    var otherDemos = '<section class="experiment" id="demos"><details><summary style="text-align:center;">Check ' + (demos.length - 1) + ' other RTCMultiConnection-v3 demos</summary>' + h2 + '<ol>';
+                    demos.forEach(function(f) {
                         if (f && f !== 'index.html' && f.indexOf('.html') !== -1) {
-                            otherweb += '<li><a href="/web/' + f + '">' + f + '</a> (<a href="https://github.com/muaz-khan/RTCMultiConnection/tree/master/web/' + f + '">Source</a>)</li>';
+                            otherDemos += '<li><a href="/demos/' + f + '">' + f + '</a> (<a href="https://github.com/muaz-khan/RTCMultiConnection/tree/master/demos/' + f + '">Source</a>)</li>';
                         }
                     });
-                    otherweb += '<ol></details></section><section class="experiment own-widgets latest-commits">';
+                    otherDemos += '<ol></details></section><section class="experiment own-widgets latest-commits">';
 
-                    file = file.replace('<section class="experiment own-widgets latest-commits">', otherweb);
+                    file = file.replace('<section class="experiment own-widgets latest-commits">', otherDemos);
                 }
             } catch (e) {}
 
@@ -181,18 +184,17 @@ app = express();
 
 app.use(bodyParser.urlencoded({ extended: true })); 
 
-app.post("/web/Counselor", function(req, res) {
+app.post("/recode/Counselor", function(req, res) {
    var mysql = require('mysql');
    var dbConnection = mysql.createConnection({   
-      host: '192.168.10.104', 
+      host: 'localhost', 
       user: 'root',   
-	  port: 3306,
       password: '!!tlsxpr12',   
       database: 'mysql' 
    });
    dbConnection.connect(function(err){
       if(err){
-         console.log(err + " Error connecting database ... \n\n");
+         console.log("Error connecting database ... \n\n");
       }else{
          console.log("connecting database ... \n\n");
          var sql = "Insert Into info (start_date, end_date, store) values ('"+req.body.startdate+"','"+req.body.enddate+"','"+ req.body.roomid+"')";
@@ -203,7 +205,7 @@ app.post("/web/Counselor", function(req, res) {
       }
    });
    res.writeHead(301,
-     {Location: 'https://192.168.10.110:8543/web/counselor.html'}
+     {Location: 'https://192.168.10.104:8543/recode/Counselor.html'}
    );
    res.end();
    
@@ -218,6 +220,8 @@ app.post("/web/Counselor", function(req, res) {
 app.listen(8000, function() {
   console.log('Server running at http://127.0.0.1:8000/');
 });
+
+
 
 
 if (isUseHTTPs) {
@@ -254,7 +258,10 @@ function log_console() {
     } catch (e) {}
 }
 
+
+
 function runServer() {
+   
     app.on('error', function(e) {
         if (e.code == 'EADDRINUSE') {
             if (e.address === '0.0.0.0') {
@@ -302,7 +309,7 @@ function runServer() {
 
         if (addr.address != 'localhost' && !isUseHTTPs) {
             console.log('Warning:');
-            console.log('\x1b[31m%s\x1b[0m ', 'Please set isUseHTTPs=true to make sure audio,video and screen web can work on Google Chrome as well.');
+            console.log('\x1b[31m%s\x1b[0m ', 'Please set isUseHTTPs=true to make sure audio,video and screen demos can work on Google Chrome as well.');
         }
 
         console.log('------------------------------');

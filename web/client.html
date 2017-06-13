@@ -199,8 +199,8 @@
         function endrecord() {
             connection.connectSocket(function (socket) {
                 socket.emit(connection.socketCustomEvent, {
-                    roomid: 'end',
-                    deleteId: roomidNo
+                    roomid: roomidNo,
+                    state: 1
                 });
             });
         };

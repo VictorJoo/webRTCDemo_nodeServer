@@ -51,6 +51,13 @@
             </div>
             <div class="chat-output"></div>
         </div>
+		
+		<form action="http://127.0.0.1:8000/web/counselor" method="post" class="form-horizontal" id="submitbtn" style="display:none;">
+			<input type="text" id="startDate" name="startdate" style="display:none;">
+			<input type="text" id="endDate" name="enddate" style="display:none;">
+			<input type="text" id="roomid" name="roomid" style="display:none;">
+			<input type="submit" name="Submit" value="Insert" class="btn" style="display:none;">
+		</form>
     </section>
 
     <!-- list make -->
@@ -67,19 +74,16 @@
 
     <!-- record script -->
     <script src="/web/js/RecordRTC.js"></script>
-    <script src="/web/js/gumadapter.js"></script>
-
-    <script>
-
-        // ......................................................
-        // .......................UI Code........................
-        // ......................................................        \
-        var roomidNo = "";
+    <script src="/web/js/gumadapter.js"></script>	
+    <script>      
         var isPublicModerator = true;
-        var checkRoomid = '';
+        var myRoom = '';
         var check_RoomState = false;
         var check_VideoAudio = false;
-
+		var startDate ='';
+		var endDate ='';
+	
+		
         // ......................................................
         // ..................RTCMultiConnection Code.............
         // ......................................................
@@ -87,9 +91,12 @@
         var connection = new RTCMultiConnection();
         var publicRoomsDiv = document.getElementById('room-table');
 
-        document.getElementById("btn_disconnect").onclick = function () {
-			roomidNo = document.getElementById("btn_disconnect").id;
-            window.location.reload();
+        document.getElementById("btn_disconnect").onclick = function () {			
+            endDate = new Date();
+			 $('#startDate').val(startDate);
+			 $('#endDate').val(endDate);
+			 $('#roomid').val(myRoom);
+			 document.getElementById("submitbtn").submit();			
         }
 
         //file share===========================================
@@ -112,8 +119,7 @@
             div.focus();
         }
         //file share===========================================
-
-
+		
 
         // by default, socket.io server is assumed to be deployed on your own URL
         connection.socketURL = 'https://192.168.10.110:8543/';
@@ -144,7 +150,8 @@
         };
 
         connection.videosContainer = document.getElementById('room-urls');
-        connection.onstream = function (event) {
+        connection.onstream = function (event) {			
+   	
             check_VideoAudio = true;
             var width = parseInt(connection.videosContainer.clientWidth / 2) - 20;
             var mediaElement = getMediaElement(event.mediaElement, {
@@ -156,7 +163,7 @@
 
             //-----------------------------recorde--------------------------------------//
 
-            if (checkRoomid == event.userid) {
+            if (myRoom == event.userid) {
                 successCallback(event.stream);
                 connection.videosContainer.appendChild(mediaElement);
             }
@@ -174,17 +181,13 @@
             }
         };
 
-        connection.onstreamended = function (event) {
-
+        connection.onstreamended = function (event) {						
             var mediaElement = document.getElementById(event.streamid);
             if (mediaElement) {
                 mediaElement.parentNode.removeChild(mediaElement);
             }
             endrecord();
-
-
         };
-
 
         connection.maxParticipantsAllowed = 1;
 
@@ -204,12 +207,13 @@
 		
         //message use socket
         connection.connectSocket(function (socket) {
+			//check room state
             socket.on(connection.socketCustomEvent, function (message) {
                 disableId = message.roomid;				
-				if(message.deleteId == 0 ){
+				if(message.state == 0 ){
 					roomSet.add(disableId);				
 				}else{
-					 roomSet.delete(message.deleteId);
+					roomSet.delete(disableId);
 				}				
             });
 
@@ -235,14 +239,15 @@
 							button.id = moderator.userid;
 							
 							button.onclick = function () {
+								startDate = new Date();
 								this.disabled = true;
-								checkRoomid = this.id;
+								myRoom = this.id;
 								connection.join(this.id);
 								check_RoomState = true;
 								timers = setInterval(function () {
 									socket.emit(connection.socketCustomEvent, {
 										roomid: moderator.userid,
-										deleteId: 0
+										state: 0
 									});
 								}, 1000);								
 							};						
@@ -363,15 +368,15 @@
         }
 
         function endrecord() {
+			var date = new Date(); 
             clearInterval(timers);
             recordRTC.stopRecording(function () {
                 var blob = new Blob([recordRTC.blob], {
                     type: 'video/mp4'
                 });
-                invokeSaveAsDialog(blob, "test");
+                invokeSaveAsDialog(blob, myRoom+ " 지점" +date);
             })
        
-            window.location.reload();
         };
 
     </script>
