@@ -5458,12 +5458,12 @@ window.RTCMultiConnection = function (roomid, forceOptions) {
 
         connection.getNumberOfBroadcastViewers = function (broadcastId, callback) {
             if (!connection.socket || !broadcastId || !callback) return;
-
+			
             connection.socket.emit('get-number-of-users-in-specific-broadcast', broadcastId, callback);
         };
 
         connection.onNumberOfBroadcastViewersUpdated = function (event) {
-            if (!connection.enableLogs || !connection.isInitiator) return;
+           
             console.info('Number of broadcast (', event.broadcastId, ') viewers', event.numberOfBroadcastViewers);
         };
 
