@@ -219,6 +219,55 @@ app.listen(8000, function() {
   console.log('Server running at http://127.0.0.1:8000/');
 });
 
+/* var express = require('express');
+var bodyParser = require('body-parser');
+app = express();
+var Connection = require('tedious').Connection;
+var Request = require('tedious').Request;
+
+
+app.use(bodyParser.urlencoded({ extended: true })); 
+
+app.post("/web/Counselor", function(req, res) {
+
+	// Create connection to database
+	var config = {
+		userName: 'stis', // update me
+		password: '!!dkagh12', // update me
+		server: 'counselorserver.database.windows.net', // update me
+		options: {
+			database: 'counselorDatabase' //update me
+		}
+	}
+	var connection = new Connection(config);
+
+	// Attempt to connect and execute queries if connection goes through
+	connection.on('connect', function(err) {
+		if (err) {
+			console.log(err)
+		}
+		else{
+			insertIntoDatabase()
+		}
+	});
+
+	function insertIntoDatabase(){
+		console.log("Inserting a brand new product into database...");
+		request = new Request(
+			"INSERT INTO counselorLog (Store, StartDate, EndDate, Counselor) OUTPUT INSERTED.ProductID VALUES  ('"+req.body.roomid+"','"+req.body.startdate+"','"+ req.body.enddate+"','victor')",
+			function(err, rowCount, rows) {
+				console.log(rowCount + ' row(s) inserted');
+			}
+		);
+		connection.execSql(request);
+	}
+});
+
+app.listen(8000, function() {
+	console.log('Server running at http://127.0.0.1:8000/');
+}); */
+//-----------------------------------------------------------------------//
+
 
 if (isUseHTTPs) {
     app = server.createServer(options, serverHandler);

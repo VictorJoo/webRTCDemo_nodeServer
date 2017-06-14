@@ -1,10 +1,10 @@
+﻿
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
     <meta charset="utf-8">
     <title>Video Conferencing using RTCMultiConnection</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
-    <link rel="shortcut icon" href="/web/logo.png">
     <link rel="stylesheet" type="text/css" href="/web/stylesheet.css">
     <!--drag & drop-->
     <script src="/web/js/jquery-1.11.0.min.js"></script>
@@ -58,25 +58,25 @@
     <!-- custom layout for HTML5 audio/video elements -->
     <script src="/web/js/getMediaElement.js"></script>
 
-    <script>
-
-        // ......................................................
-        // .......................UI Code........................
-        // ......................................................
-        var roomidNo = window.location.search.substring(8).replace(/(^\s*)|(\s*$)/gi, "");;
+    <script>   
+        var roomidno = window.location.search.substring(8).replace(/(^\s*)|(\s*$)/gi, "");;
         var isPublicModerator = true;
         var checkRoomid = '';
         var check_RoomState = false;
         var check_VideoAudio = false;
         function getuserId() {
-            connection.open(roomidNo, isPublicModerator);
-            createidno = roomidNo;
+            connection.open(roomidno, isPublicModerator);
+            createidno = roomidno;
         };
 
         // ......................................................
         // ..................RTCMultiConnection Code.............
         // ......................................................
-        var connection = new RTCMultiConnection();     
+
+        var connection = new RTCMultiConnection();
+
+
+        //file share===========================================
 
         var chatContainer = document.querySelector('.chat-output');
         function appendDIV(event) {
@@ -86,9 +86,15 @@
             div.tabIndex = 0;
             div.focus();
         }
-    
-		// by default, socket.io server is assumed to be deployed on your own URL
-        connection.socketURL = 'https://192.168.10.110:8543/';       
+        //file share===========================================
+
+
+
+        // by default, socket.io server is assumed to be deployed on your own URL
+        connection.socketURL = 'https://192.168.10.110:8543/';
+
+        // comment-out below line if you do not have your own socket.io server
+        // connection.socketURL = 'https://rtcmulticonnection.herokuapp.com:443/';
 
         connection.socketMessageEvent = 'video-conference-demo';
 
@@ -121,12 +127,15 @@
             });
 
 
-            if (event.userid != roomidNo) {
-                if (roomidNo != "") {
-                    document.getElementById("room-item-info").innerHTML = "<div id='txtinput' style='font-size: 6em; margin-top: 28%;' >안녕하세요.</div>";                  
+            if (event.userid != roomidno) {
+                if (roomidno != "") {
+                    document.getElementById("room-item-info").innerHTML = "<div id='txtinput' style='font-size: 6em; margin-top: 28%;' >안녕하세요.</div>";
+
+                    //on camera
+                    //document.getElementsByClassName("testimgsize")[0].remove();
+                    //connection.videosContainer.appendChild(mediaElement);
                 }
             }
-			
             setTimeout(function () {
                 mediaElement.media.play();
             }, 10);
@@ -147,14 +156,12 @@
                 mediaElement.parentNode.removeChild(mediaElement);
             }
 
-
             endrecord();
 
             var adddiv = document.getElementById("room-urls");
             adddiv.innerHTML = "<img class='endimage' src='logo_image/thefaceshop.jpg' style='width: 100%;'>";
             document.getElementById("room-item-info").innerHTML = "<div id='txtinput' style='font-size: 6em; margin-top: 28%;' >감사합니다.</div>";
             connection.closeSocket();
-
             setTimeout(function () {
                 window.location.reload();
             }, 5000);
@@ -166,7 +173,6 @@
         // ......................................................
         // ......................Handling Room-ID................
         // ......................................................
-
         (function () {
             var params = {},
                 r = /([^&=]+)=?([^&]*)/g;
@@ -182,13 +188,13 @@
 
         var roomid = '';
 
-        if (roomidNo != "") {
-
+        if (roomidno != "") {
+		
             if (localStorage.getItem(connection.socketMessageEvent)) {
-                roomid = roomidNo;
+                roomid = roomidno;
                 getuserId();
             } else {
-                roomid = roomidNo;
+                roomid = roomidno;
                 getuserId();
             }
 
@@ -196,15 +202,15 @@
             getuserId();
         }
 
+
         function endrecord() {
             connection.connectSocket(function (socket) {
                 socket.emit(connection.socketCustomEvent, {
-                    roomid: roomidNo,
+                    roomid: roomidno,
                     state: 1
                 });
             });
         };
-
     </script>
     <script src="/web/js/common.js"></script>
 </body>

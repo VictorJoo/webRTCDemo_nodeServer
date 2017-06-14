@@ -1,10 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
     <meta charset="utf-8">
     <title>Video Conferencing using RTCMultiConnection</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
-    <link rel="shortcut icon" href="/web/logo.png">
     <link rel="stylesheet" type="text/css" href="/web/stylesheet.css">
     <!--drag & drop-->
     <script src="/web/js/jquery-1.11.0.min.js"></script>
@@ -13,7 +12,7 @@
 <body>
     <section class="make-center" id="ssss">
         <div class="main-header" style="background: linear-gradient( to left, green, white ); height: 70px">
-            <img style="float: right !important; height: 80%;margin-top : 10px" src="logo_image/logo(38).png">
+            <img style="float: right !important; height: 80%;margin-top : 10px" src="logo_image/logo.png">
             <img style="float: left !important; height: 80%; margin-top : 10px;margin-left: 10px" src="logo_image/Logo_beecast_blue.png">
         </div>
 
@@ -51,13 +50,13 @@
             </div>
             <div class="chat-output"></div>
         </div>
-		
-		<form action="http://127.0.0.1:8000/web/counselor" method="post" class="form-horizontal" id="submitbtn" style="display:none;">
-			<input type="text" id="startDate" name="startdate" style="display:none;">
-			<input type="text" id="endDate" name="enddate" style="display:none;">
-			<input type="text" id="roomid" name="roomid" style="display:none;">
-			<input type="submit" name="Submit" value="Insert" class="btn" style="display:none;">
-		</form>
+
+        <form action="http://127.0.0.1:8000/web/counselor" method="post" class="form-horizontal" id="submitbtn" style="display:none;">
+            <input type="text" id="startDate" name="startdate" style="display:none;">
+            <input type="text" id="endDate" name="enddate" style="display:none;">
+            <input type="text" id="roomid" name="roomid" style="display:none;">
+            <input type="submit" name="Submit" value="Insert" class="btn" style="display:none;">
+        </form>
     </section>
 
     <!-- list make -->
@@ -66,7 +65,7 @@
 
     </div>
 
-    <script src="/dist/RTCMultiConnection.js"></script>
+    <script src="/web/js/RTCMultiConnection.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/web/js/FileBufferReader.js"></script>
     <!-- custom layout for HTML5 audio/video elements -->
@@ -74,16 +73,17 @@
 
     <!-- record script -->
     <script src="/web/js/RecordRTC.js"></script>
-    <script src="/web/js/gumadapter.js"></script>	
-    <script>      
+    <script src="/web/js/gumadapter.js"></script>
+    <script>
+        var roomidno = "";
         var isPublicModerator = true;
         var myRoom = '';
         var check_RoomState = false;
         var check_VideoAudio = false;
-		var startDate ='';
-		var endDate ='';
-	
-		
+        var startDate = '';
+        var endDate = '';
+
+
         // ......................................................
         // ..................RTCMultiConnection Code.............
         // ......................................................
@@ -91,17 +91,20 @@
         var connection = new RTCMultiConnection();
         var publicRoomsDiv = document.getElementById('room-table');
 
-        document.getElementById("btn_disconnect").onclick = function () {			
+        document.getElementById("btn_disconnect").onclick = function () {
             endDate = new Date();
-			 $('#startDate').val(startDate);
-			 $('#endDate').val(endDate);
-			 $('#roomid').val(myRoom);
-			 document.getElementById("submitbtn").submit();			
+            $('#startDate').val(startDate);
+            $('#endDate').val(endDate);
+            $('#roomid').val(myRoom);
+            document.getElementById("submitbtn").submit();
         }
 
         //file share===========================================
         document.getElementById('share-file').onclick = function () {
-
+			var list=document.getElementById("room-item-info");
+			var parentDiv = list.parentNode;
+			parentDiv.removeChild(list);
+			
             var notuser = true;
             var fileSelector = new FileSelector();
             fileSelector.selectSingleFile(function (file) {
@@ -110,8 +113,7 @@
         };
 
         var chatContainer = document.querySelector('.chat-output');
-        function appendDIV(event) {
-
+        function appendDIV(event) {			
             var div = document.createElement('div');
             div.innerHTML = event.data || event;
             chatContainer.insertBefore(div, chatContainer.firstChild);
@@ -119,7 +121,7 @@
             div.focus();
         }
         //file share===========================================
-		
+
 
         // by default, socket.io server is assumed to be deployed on your own URL
         connection.socketURL = 'https://192.168.10.110:8543/';
@@ -150,8 +152,8 @@
         };
 
         connection.videosContainer = document.getElementById('room-urls');
-        connection.onstream = function (event) {			
-   	
+        connection.onstream = function (event) {
+
             check_VideoAudio = true;
             var width = parseInt(connection.videosContainer.clientWidth / 2) - 20;
             var mediaElement = getMediaElement(event.mediaElement, {
@@ -181,7 +183,7 @@
             }
         };
 
-        connection.onstreamended = function (event) {						
+        connection.onstreamended = function (event) {
             var mediaElement = document.getElementById(event.streamid);
             if (mediaElement) {
                 mediaElement.parentNode.removeChild(mediaElement);
@@ -203,18 +205,18 @@
 
 
         var disableId = '';
-        var roomSet = new Set();		
-		
+        var roomSet = new Set();
+
         //message use socket
         connection.connectSocket(function (socket) {
-			//check room state
+            //check room state
             socket.on(connection.socketCustomEvent, function (message) {
-                disableId = message.roomid;				
-				if(message.state == 0 ){
-					roomSet.add(disableId);				
-				}else{
-					roomSet.delete(disableId);
-				}				
+                disableId = message.roomid;
+                if (message.state == 0) {
+                    roomSet.add(disableId);
+                } else {
+                    roomSet.delete(disableId);
+                }
             });
 
             (function looper() {
@@ -224,37 +226,37 @@
 
                     publicRoomsDiv.innerHTML = '';
                     array.forEach(function (moderator) {
-                        
+
                         if (moderator.userid == connection.userid) return; // if owner himself
 
                         var li = document.createElement('li');
                         li.innerHTML = '<b>' + moderator.userid + '</b>&nbsp;&nbsp;';
 
-						if(roomSet.has(moderator.userid)){
+                        if (roomSet.has(moderator.userid)) {
                             var button = document.createElement('button');
                             button.id = moderator.userid;
                             button.disabled = true;
-						}else{
-							var button = document.createElement('button');
-							button.id = moderator.userid;
-							
-							button.onclick = function () {
-								startDate = new Date();
-								this.disabled = true;
-								myRoom = this.id;
-								connection.join(this.id);
-								check_RoomState = true;
-								timers = setInterval(function () {
-									socket.emit(connection.socketCustomEvent, {
-										roomid: moderator.userid,
-										state: 0
-									});
-								}, 1000);								
-							};						
-						}
-                       
+                        } else {
+                            var button = document.createElement('button');
+                            button.id = moderator.userid;
+
+                            button.onclick = function () {
+                                startDate = new Date();
+                                this.disabled = true;
+                                myRoom = this.id;
+                                connection.join(this.id);
+                                check_RoomState = true;
+                                timers = setInterval(function () {
+                                    socket.emit(connection.socketCustomEvent, {
+                                        roomid: moderator.userid,
+                                        state: 0
+                                    });
+                                }, 1000);
+                            };
+                        }
+
                         button.innerHTML = '상담 시작';
-                      
+
                         mytable = document.getElementById('room-table');
                         mycurrent_row = document.createElement("tr");
                         mycurrent_cell = document.createElement("td");
@@ -271,7 +273,7 @@
                         publicRoomsDiv.insertBefore(fir, publicRoomsDiv.firstChild);
 
                         if (moderator.userid == connection.sessionid) {
-                           
+
                             if (check_VideoAudio) {
                                 button.disabled = true;
                                 button.innerHTML = '상담 중';
@@ -289,7 +291,6 @@
 
                 });
             })();
-
         });
 
 
@@ -336,7 +337,7 @@
         var roomid = '';
 
         $(function () {
-            $('#room-item-info').on({
+            $('#room-item-info').on({			
                 'drop': function (e) {
                     var f = e.originalEvent.dataTransfer.files[0];
                     var reader = new FileReader();
@@ -368,17 +369,15 @@
         }
 
         function endrecord() {
-			var date = new Date(); 
+            var date = new Date();
             clearInterval(timers);
             recordRTC.stopRecording(function () {
                 var blob = new Blob([recordRTC.blob], {
                     type: 'video/mp4'
                 });
-                invokeSaveAsDialog(blob, myRoom+ " 지점" +date);
+                invokeSaveAsDialog(blob, myRoom + " 지점 " + date);
             })
-       
         };
-
     </script>
     <script src="/web/js/common.js"></script>
 </body>
