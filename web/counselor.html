@@ -8,14 +8,41 @@
     <!--drag & drop-->
     <script src="/web/js/jquery-1.11.0.min.js"></script>
     <script src="/web/js/jquery-ui.min.js"></script>
+
+    <script language="javascript">
+        $(document).ready(function () {
+            $.ajax({
+                url: 'https://192.168.10.110:8000/web/check',
+                type: 'GET',
+                async: false,
+                cache: false,
+                timeout: 5000,
+                crossDomain: true,
+                xhrFields: {
+                    withCredentials: true
+                },
+                success: function (data) {
+                    if (data.flag) {
+                        location.href = "https://192.168.10.110:8543/web/login/index.html";
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    alert('Error connecting to the Node.js server... ' + textStatus + " " + errorThrown);
+                }
+            });
+        });
+    </script>
+
 </head>
 <body>
     <section class="make-center" id="ssss">
         <div class="main-header" style="background: linear-gradient( to left, green, white ); height: 70px">
             <img style="float: right !important; height: 80%;margin-top : 10px" src="logo_image/logo.png">
             <img style="float: left !important; height: 80%; margin-top : 10px;margin-left: 10px" src="logo_image/Logo_beecast_blue.png">
-        </div>
 
+            <a href="https://192.168.10.110:8000/web/logout">로그아웃</a><br>
+			<span id="minutes">00</span>:<span id="seconds">00</span>
+        </div>
 
         <div class="room-wrap">
             <div class="room-list" id="romm-list" style="">
@@ -51,17 +78,17 @@
             <div class="chat-output"></div>
         </div>
 
-        <form action="http://127.0.0.1:8000/web/counselor" method="post" class="form-horizontal" id="submitbtn" style="display:none;">
+        <form action="https://127.0.0.1:8000/web/Counselor" method="post" class="form-horizontal" id="submitbtn" style="display:none;">
             <input type="text" id="startDate" name="startdate" style="display:none;">
             <input type="text" id="endDate" name="enddate" style="display:none;">
             <input type="text" id="roomid" name="roomid" style="display:none;">
+            <input type="text" id="user_id" name="user_id" style="display:none;">
             <input type="submit" name="Submit" value="Insert" class="btn" style="display:none;">
         </form>
     </section>
 
     <!-- list make -->
     <div>
-
 
     </div>
 
@@ -82,7 +109,7 @@
         var check_VideoAudio = false;
         var startDate = '';
         var endDate = '';
-
+		var callTime = '';
 
         // ......................................................
         // ..................RTCMultiConnection Code.............
@@ -92,19 +119,24 @@
         var publicRoomsDiv = document.getElementById('room-table');
 
         document.getElementById("btn_disconnect").onclick = function () {
-            endDate = new Date();
-            $('#startDate').val(startDate);
-            $('#endDate').val(endDate);
-            $('#roomid').val(myRoom);
-            document.getElementById("submitbtn").submit();
+            
+           window.location.reload();
         }
+		//calling timer............................................................................................
+		var sec = 0;
+
+		function pad(val) {
+			return val > 9 ? val : "0" + val;
+		}
+	
+				
 
         //file share===========================================
         document.getElementById('share-file').onclick = function () {
-			var list=document.getElementById("room-item-info");
-			var parentDiv = list.parentNode;
-			parentDiv.removeChild(list);
-			
+            var list = document.getElementById("room-item-info");
+            var parentDiv = list.parentNode;
+            parentDiv.removeChild(list);
+
             var notuser = true;
             var fileSelector = new FileSelector();
             fileSelector.selectSingleFile(function (file) {
@@ -113,7 +145,7 @@
         };
 
         var chatContainer = document.querySelector('.chat-output');
-        function appendDIV(event) {			
+        function appendDIV(event) {
             var div = document.createElement('div');
             div.innerHTML = event.data || event;
             chatContainer.insertBefore(div, chatContainer.firstChild);
@@ -121,7 +153,6 @@
             div.focus();
         }
         //file share===========================================
-
 
         // by default, socket.io server is assumed to be deployed on your own URL
         connection.socketURL = 'https://192.168.10.110:8543/';
@@ -203,7 +234,6 @@
             window.location.reload();
         };
 
-
         var disableId = '';
         var roomSet = new Set();
 
@@ -235,6 +265,7 @@
                         if (roomSet.has(moderator.userid)) {
                             var button = document.createElement('button');
                             button.id = moderator.userid;
+                            button.innerHTML = '상담 중';
                             button.disabled = true;
                         } else {
                             var button = document.createElement('button');
@@ -252,6 +283,10 @@
                                         state: 0
                                     });
                                 }, 1000);
+								call_timer = setInterval(function () {
+									document.getElementById("seconds").innerHTML = pad(++sec % 60);
+									document.getElementById("minutes").innerHTML = pad(parseInt(sec / 60, 10));
+								}, 1000);
                             };
                         }
 
@@ -337,7 +372,7 @@
         var roomid = '';
 
         $(function () {
-            $('#room-item-info').on({			
+            $('#room-item-info').on({
                 'drop': function (e) {
                     var f = e.originalEvent.dataTransfer.files[0];
                     var reader = new FileReader();
@@ -352,7 +387,6 @@
                 }
             })
         });
-
 
         //---------------------------recorde--------------------------------------------//
         var recordRTC;
@@ -370,13 +404,44 @@
 
         function endrecord() {
             var date = new Date();
-            clearInterval(timers);
+			endDate = new Date();
+			clearInterval(timers);
+			clearInterval(call_timer);
+			callTime = document.getElementById("minutes").textContent + ":" +document.getElementById("seconds").textContent;			
+			
+			alert(callTime);
+            $.ajax({
+                type: 'POST',
+                url: 'https://192.168.10.110:8000/web/Counselor',
+                crossDomain: true,
+                data:
+                {
+                    "startdate": startDate,
+                    "enddate": endDate,
+                    "roomid": myRoom,
+					"calling_time" : callTime
+                },
+                xhrFields: {
+                    withCredentials: true
+                },
+                success: function (data) {
+                    console.log(data);
+                },
+                error: function (error) {
+                    console.log("Error!" + error);
+                },
+
+            });			
+			
+           
+			
             recordRTC.stopRecording(function () {
                 var blob = new Blob([recordRTC.blob], {
                     type: 'video/mp4'
                 });
                 invokeSaveAsDialog(blob, myRoom + " 지점 " + date);
-            })
+            });
+            window.location.reload();
         };
     </script>
     <script src="/web/js/common.js"></script>
