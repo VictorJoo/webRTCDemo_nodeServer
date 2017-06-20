@@ -10,9 +10,9 @@
     <script src="/web/js/jquery-ui.min.js"></script>
 
     <script>
-		var ip_addr="https://192.168.10.110:8543";
-		var ip_server="https://192.168.10.110:8000";
-	
+        var ip_addr = "https://192.168.10.110:8543";
+        var ip_server = "https://192.168.10.110:8000";
+
         function checkready() {
             $.ajax({
                 type: 'POST',
@@ -29,7 +29,7 @@
 
         $(document).ready(function () {
             $.ajax({
-                url: ip_server+'/web/check',
+                url: ip_server + '/web/check',
                 type: 'GET',
                 async: false,
                 cache: false,
@@ -41,7 +41,7 @@
                 success: function (data) {
                     if (data.flag) {
                         alert('로그인 해주세요');
-                        location.href = ip_addr+ "/web/login/index.html";
+                        location.href = ip_addr + "/web/login/index.html";
                     }
                     checkready();
                 },
@@ -58,7 +58,8 @@
             <img style="float: right !important; height: 80%;margin-top : 10px" src="logo_image/logo.png">
             <img style="float: left !important; height: 80%; margin-top : 10px;margin-left: 10px" src="logo_image/Logo_beecast_blue.png">
 
-            <a href="https://192.168.10.110:8000/web/logout">로그아웃</a><br>
+            <button type="button" id="btn_logout">로그아웃</button>
+			<button type="button" id ="btn_table">테이블</button>
             <span id="minutes">00</span>:<span id="seconds">00</span>
         </div>
 
@@ -121,19 +122,50 @@
         var endDate = '';
         var callTime = '';
         var fileName = '';
+        var video_nm = '';
         var readyroom;
-
         // ......................................................
         // ..................RTCMultiConnection Code.............
         // ......................................................
 
         var connection = new RTCMultiConnection();
         var publicRoomsDiv = document.getElementById('room-table');
-
+		
+		document.getElementById("btn_table").onclick = function (){
+			location.href= "https://192.168.10.110:8543/web/table.html";
+		}		
+		
         document.getElementById("btn_disconnect").onclick = function () {
-
             window.location.reload();
         }
+		
+		
+        //logout==========================================
+        document.getElementById("btn_logout").onclick = function () {
+            closeweb();
+        }
+
+        function closeweb() {
+            $.ajax({
+                type: 'POST',
+                url: 'https://192.168.10.110:8000/web/logout',
+                crossDomain: true,
+                xhrFields: {
+                    withCredentials: true
+                },
+                success: function (data) {
+                    if (data.message == 'logout');
+                    location.href = ip_addr + "/web/login/index.html";
+                },
+                error: function (error) {
+
+                },
+
+            });
+        }
+
+
+
         //calling timer............................................................................................
         var sec = 0;
 
@@ -169,7 +201,7 @@
         //file share===========================================
 
         // by default, socket.io server is assumed to be deployed on your own URL
-        connection.socketURL = ip_addr+'/';
+        connection.socketURL = ip_addr + '/';
 
         // comment-out below line if you do not have your own socket.io server
         // connection.socketURL = 'https://rtcmulticonnection.herokuapp.com:443/';
@@ -296,10 +328,8 @@
                             var button = document.createElement('button');
                             button.id = moderator.userid;
 
-                            button.onclick = function () {
-                                var day = (new Date()).toLocaleDateString().replace('. ', '-').replace('. ', '-').substring(0, 9);
-                                var time = (new Date()).toLocaleTimeString().substring(3, 11);
-                                startDate = day + " " + time;
+                            button.onclick = function () {                               
+                                startDate = (new Date ((new Date((new Date(new Date())).toISOString() )).getTime() - ((new Date()).getTimezoneOffset()*60000))).toISOString().slice(0, 19).replace('T', ' ');
 
                                 this.disabled = true;
                                 myRoom = this.id;
@@ -445,24 +475,24 @@
         }
 
         function endrecord() {
-            var date = new Date();
-            var day = (new Date()).toLocaleDateString().replace('. ', '-').replace('. ', '-').substring(0, 9);
-            var time = (new Date()).toLocaleTimeString().substring(3, 11);
-            endDate = day + " " + time;
+            endDate = (new Date ((new Date((new Date(new Date())).toISOString() )).getTime() - ((new Date()).getTimezoneOffset()*60000))).toISOString().slice(0, 19).replace('T', ' ');
             clearInterval(timers);
             clearInterval(call_timer);
             callTime = document.getElementById("minutes").textContent + ":" + document.getElementById("seconds").textContent;
+
+            video_nm = myRoom + " 지점 ";
 
             recordRTC.stopRecording(function () {
                 var blob = new Blob([recordRTC.blob], {
                     type: 'video/mp4'
                 });
-                invokeSaveAsDialog(blob, decodeURI(myRoom) + " 지점 " + date);
+                invokeSaveAsDialog(blob, video_nm);
             });
 
+            alert(video_nm);
             $.ajax({
                 type: 'POST',
-                url: ip_server+'/web/Counselor',
+                url: ip_server + '/web/Counselor',
                 crossDomain: true,
                 xhrFields: {
                     withCredentials: true
@@ -473,18 +503,18 @@
                     "end_date": endDate,
                     "store": decodeURI(myRoom),
                     "calling_time": callTime,
-                    "item": fileName
+                    "item": fileName,
+                    "video_nm": video_nm
                 },
                 success: function (data) {
                     console.log(data);
+                    connection.closeSocket();
+                    window.location.reload();
                 },
                 error: function (error) {
                     console.log("Error!" + JSON.stringify(error));
                 },
-
             });
-            connection.closeSocket();
-            window.location.reload();
         };
     </script>
     <script src="/web/js/common.js"></script>

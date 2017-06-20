@@ -176,6 +176,7 @@ function serverHandler(request, response) {
 var app;
 var sess;
 var testid;
+var counselorlogin = new Array(); //?ÅÎã¥??on off check
 
 //---------------------------db---------------------------------//
 var express = require('express');
@@ -207,7 +208,7 @@ var dbConnection = mysql.createConnection({
 
 app.post("/web/Counselor", function (req, res) {
 
-    var sql = "Insert into counselorlog (counselor_id, store, start_date, end_date, calling_time, item) values ('" + req.session.user_id + "','" + req.body.store + "','" + req.body.start_date + "','" + req.body.end_date + "','" + req.body.calling_time + "','" + req.body.item + "')";
+    var sql = "Insert into counselorlog (counselor_id, store, start_date, end_date, calling_time, item,video_nm) values ('" + req.session.user_id + "','" + req.body.store + "','" + req.body.start_date + "','" + req.body.end_date + "','" + req.body.calling_time + "','" + req.body.item + "','" + req.body.video_nm + "')";
     dbConnection.query(sql, function (err, result) {
         if (err) throw err;
         console.log("1 record inserted");
@@ -239,22 +240,27 @@ app.post('/web/login', function (req, res) {
         var cnt = rows[0].cnt;
         if (cnt == 1) {
             sess.user_id = id;
+            counselorlogin.push(id);
             res.send('<script>location.href="' + ip_addr + '/web/counselor.html";</script>');
         } else {
             res.send('<script>history.back();</script>');
         }
     });
-
 });
 
 app.get('/web/logout', function (req, res) {
     sess = req.session;
+    counselorlogin.splice(counselorlogin.indexOf(sess.userid), 1);
+
+    res.setHeader("Access-Control-Allow-Origin", ip_addr);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     if (sess.user_id) {
         req.session.destroy(function (err) {
             if (err) {
                 console.log(err);
             } else {
-                res.redirect(ip_addr + '/web/login/index.html');
+                res.send({ message: "logout" });
+                //res.redirect(ip_addr + '/web/login/index.html');
             }
         })
     } else {
@@ -331,12 +337,43 @@ app.post('/checkmynum', function (req, res) {
     });
 });
 
+//------------------counselor is check------------------//
+app.post('/counselorcheck', function (req, res) {
+    res.setHeader("Access-Control-Allow-Origin", ip_addr);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+    if (counselorlogin != null) {
+        res.send({ message: 'counseloron' })
+    } else {
+        res.send({ message: 'counseloroff' })
+    }
+
+});
+
+//---------------------make table-----------------------------//
+app.post('/getinfo', function(req,res){	
+	res.setHeader("Access-Control-Allow-Origin", ip_addr);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+	
+	var sql = "select * from counselorlog;";
+    dbConnection.query(sql, function (err, rows, result) {
+        if (err) throw err;        
+		console.log(rows);
+		
+        res.send(rows);
+    });
+	
+	
+})
 
 var https = require('https');
 
 https.createServer(options, app).listen(8000, function () {
     console.log('Server running at http://127.0.0.1:8000/');
 });
+
+
+
 
 //-----------------------------------------------------------------------//
 

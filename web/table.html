@@ -1,0 +1,61 @@
+
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8">
+    <title>Video Conferencing using RTCMultiConnection</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+	<script src="/web/js/jquery-1.11.0.min.js"></script>
+    <script src="/web/js/jquery-ui.min.js"></script>
+
+</head>
+<body>
+asdasdasdasd
+	<script language="JavaScript">
+	$(document).ready(function () {           
+            $.ajax({
+                type: 'POST',
+                url: 'https://192.168.10.110:8000/getinfo',
+                crossDomain: true,
+                xhrFields: {
+                    withCredentials: true
+                },                
+                success: function (data) {
+                    console.log('성공했음');
+					
+					document.write("<table width='100%' height='100%' border='0' cellspacing='0' cellpadding='0'>")
+					document.write("<tr>")
+					document.write("<td align='center'>")					 
+					 document.write("<table border='0' cellspacing='1' cellpadding='0' bgcolor='#000000'>");
+					 
+					  for(i=0; i<=data.length; i++) {
+					  document.write("<tr>");			 
+					   document.write("<td width='50' height='20' bgcolor='#FFFFFF'>" + data[i].no+ "</td>");
+					   document.write("<td width='50' height='20' bgcolor='#FFFFFF'>" + data[i].counselor_id+ "</td>");
+					   document.write("<td width='50' height='20' bgcolor='#FFFFFF'>" + data[i].store+ "</td>");
+					   document.write("<td width='50' height='20' bgcolor='#FFFFFF'>" + data[i].start_date+ "</td>");
+					   document.write("<td width='50' height='20' bgcolor='#FFFFFF'>" + data[i].end_date+ "</td>");
+					   document.write("<td width='50' height='20' bgcolor='#FFFFFF'>" + data[i].calling_time+ "</td>");
+					   document.write("<td width='50' height='20' bgcolor='#FFFFFF'>" + data[i].item+ "</td>");
+					   document.write("<td width='50' height='20' bgcolor='#FFFFFF'>" + data[i].video_nm+ "</td>");
+					 
+					  document.write("</tr>");
+					  }
+					 
+					 document.write("</table>");
+					 
+					document.write("</td>");
+					document.write("</tr>");
+					document.write("</table>");
+										
+                },
+                error: function (err) {
+                    console.log('error');
+                }
+            });
+        });
+	
+	</script>
+asdasdasd
+</body>
+</html>

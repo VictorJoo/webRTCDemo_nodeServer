@@ -234,16 +234,10 @@
 
         var startday;
         $(document).ready(function () {
-            console.log("HTML READY");
-            <!-- var day = (new Date()).toLocaleDateString().replace('. ', '-').replace('. ', '-').substring(0, 9); -->
-            <!-- var time = (new Date()).toLocaleTimeString().substring(3, 11); -->
-            <!-- if ((new Date()).toLocaleTimeString().substring(0, 2) == '오전') { -->
-
-            <!-- } -->
-			<!-- startday = day + " " + time; -->
+            console.log("HTML READY");            
             var rid = decodeURI(roomidno);
             startday = (new Date ((new Date((new Date(new Date())).toISOString() )).getTime() - ((new Date()).getTimezoneOffset()*60000))).toISOString().slice(0, 19).replace('T', ' ');
-			
+
             console.log(startday + "::::::" + rid);
             $.ajax({
                 type: 'POST',
@@ -270,13 +264,8 @@
         // --------------------------------------------------------------------------//
 
         var endday;
-        $("#lostcall").click(function () {
-            var day = (new Date()).toLocaleDateString().replace('. ', '-').replace('. ', '-').substring(0, 9);
-            var time = (new Date()).toLocaleTimeString().substring(3, 11);
-            if ((new Date()).toLocaleTimeString().substring(0, 2) == '오전') {
-
-            }
-            endday = day + " " + time;
+        $("#lostcall").click(function () {         
+            endday = (new Date ((new Date((new Date(new Date())).toISOString() )).getTime() - ((new Date()).getTimezoneOffset()*60000))).toISOString().slice(0, 19).replace('T', ' ');
             lostcall();
         });
 
