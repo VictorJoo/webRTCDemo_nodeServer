@@ -14,7 +14,7 @@ var isUseHTTPs = true;
 var port = 8543;
 //var port = process.env.PORT || 9005;
 var ip_addr = "https://192.168.10.110:8543";
-var mysql_addr = '192.168.10.104'
+var mysql_addr = '192.168.10.110'
 var fs = require('fs');
 var path = require('path');
 
@@ -181,6 +181,7 @@ var testid;
 var express = require('express');
 var bodyParser = require('body-parser');
 var session = require('express-session');
+var cors = require('cors');
 
 app = express();
 
@@ -192,55 +193,49 @@ app.use(session({
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.post("/web/Counselor", function (req, res) {
-	res.setHeader("Access-Control-Allow-Origin", ip_addr);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-	
-    var mysql = require('mysql');
-    var dbConnection = mysql.createConnection({
-        host: '192.168.10.104',
-        user: 'root',
-        port: 3306,
-        password: '!!tlsxpr12',
-        database: 'mysql'
-    });
-    dbConnection.connect(function (err) {
-        if (err) {
-            console.log(err + " Error connecting database ... \n\n");
-        } else {
-            console.log("connecting database ... \n\n");
-            var sql = "Insert Into counselorlog (counselor_id,store,start_date, end_date,calling_time) values ('" + req.session.user_id + "','" + req.body.roomid + "','" + req.body.startdate + "','" + req.body.enddate + "','" + req.body.calling_time + "')";
-            dbConnection.query(sql, function (err, result) {
-                if (err) throw err;
-                console.log("1 record inserted");
-            });
-        }
-    });
-    res.writeHead(301,
-      { Location: ip_addr + '/web/counselor.html' }
-    );
-    res.end();
+var sql = "select count(*) cnt from member Where id=? and password=?"
+var mysql = require('mysql');
+var dbConnection = mysql.createConnection({
+    host: mysql_addr,
+    user: 'root',
+    port: 3306,
+    password: '!!tlsxpr12',
+    database: 'mysql'
 });
 
 
+
+app.post("/web/Counselor", function (req, res) {
+
+    var sql = "Insert into counselorlog (counselor_id, store, start_date, end_date, calling_time, item) values ('" + req.session.user_id + "','" + req.body.store + "','" + req.body.start_date + "','" + req.body.end_date + "','" + req.body.calling_time + "','" + req.body.item + "')";
+    dbConnection.query(sql, function (err, result) {
+        if (err) throw err;
+        console.log("1 record inserted");
+    });
+
+
+    sql = "delete from readyroom where store='" + req.body.store + "'";
+    dbConnection.query(sql, function (err, result) {
+        if (err) throw err;
+    });
+
+
+    res.setHeader("Access-Control-Allow-Origin", ip_addr);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.send({ message: 'yes' });
+
+});
+
 app.post('/web/login', function (req, res) {
+    res.setHeader("access-control-allow-origin", ip_addr);
+    res.setHeader('access-control-allow-credentials', 'true');
+
     sess = req.session;
     var id = req.body.id;
     var password = req.body.password;
 
-    var sql = "select count(*) cnt from member Where id=? and password=?"
-    var mysql = require('mysql');
-    var dbConnection = mysql.createConnection({
-        host: mysql_addr,
-        user: 'root',
-        port: 3306,
-        password: '!!tlsxpr12',
-        database: 'mysql'
-    });
-
     dbConnection.query(sql, [id, password], function (err, rows) {
         if (err) throw err;
-        console.log('rows', rows);
         var cnt = rows[0].cnt;
         if (cnt == 1) {
             sess.user_id = id;
@@ -278,6 +273,63 @@ app.get('/web/check', function (req, res) {
     }
 });
 
+app.post('/readyroom', function (req, res) {
+    var sql = "select * from readyroom where store='" + req.body.roomid + "'";
+    dbConnection.query(sql, function (err, rows, result) {
+        if (err) throw err;
+        if (rows.length > 0) {
+
+        } else {
+            var sql = "Insert into readyroom (store, start) values ('" + req.body.roomid + "','" + req.body.startday + "')";
+            dbConnection.query(sql, function (err, result) {
+                if (err) throw err;
+                console.log("insert from readyroom");
+            });
+        }
+    });
+});
+
+
+//----------------------------------------------------------------------//
+//-------------------------Lost Call-----------------------------------//
+//----------------------------------------------------------------------//
+app.post('/lostcall', function (req, res) {
+    var sql = "delete from readyroom where store = '" + req.body.roomid + "'";
+    dbConnection.query(sql, function (err, result) {
+        if (err) throw err;
+    });
+
+    sql = "Insert into lostroom (store, start_date, end_date) value ('" + req.body.roomid + "','" + req.body.startday + "','" + req.body.endday + "')";
+    dbConnection.query(sql, function (err, result) {
+        if (err) throw err;
+    });
+
+});
+
+
+//--------------------check ready room----------------------//
+app.post('/checkready', function (req, res) {
+    var sql = "select @RNUM := @RNUM + 1 AS RNUM, store from readyroom, (SELECT @RNUM := 0) store order by start asc";
+    dbConnection.query(sql, function (err, rows, result) {
+        if (err) throw err;
+        res.setHeader("Access-Control-Allow-Origin", ip_addr);
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+        res.send(rows);
+    });
+
+});
+
+//------------------wait------------------//
+app.post('/checkmynum', function (req, res) {
+    res.setHeader("Access-Control-Allow-Origin", ip_addr);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+    var sql = "select RNUM from (select @RNUM := @RNUM + 1 AS RNUM, store, start from readyroom, (SELECT @RNUM := 0) store order by start asc) as test where store ='" + req.body.roomid + "'";
+    dbConnection.query(sql, function (err, rows, result) {
+        if (err) throw err;
+        res.send(rows);
+    });
+});
 
 
 var https = require('https');
@@ -285,6 +337,7 @@ var https = require('https');
 https.createServer(options, app).listen(8000, function () {
     console.log('Server running at http://127.0.0.1:8000/');
 });
+
 //-----------------------------------------------------------------------//
 
 if (isUseHTTPs) {
@@ -322,6 +375,9 @@ function log_console() {
 }
 
 function runServer() {
+
+
+
     app.on('error', function (e) {
         if (e.code == 'EADDRINUSE') {
             if (e.address === '0.0.0.0') {
@@ -378,17 +434,7 @@ function runServer() {
     require('./Signaling-Server.js')(app, function (socket) {
 
         try {
-
             var params = socket.handshake.query;
-
-            // "socket" object is totally in your own hands!
-            // do whatever you want!
-
-            // in your HTML page, you can access socket as following:
-            // connection.socketCustomEvent = 'custom-message';
-            // var socket = connection.getSocket();
-            // socket.emit(connection.socketCustomEvent, { test: true });
-
             if (!params.socketCustomEvent) {
                 params.socketCustomEvent = 'custom-message';
             }

@@ -9,10 +9,27 @@
     <script src="/web/js/jquery-1.11.0.min.js"></script>
     <script src="/web/js/jquery-ui.min.js"></script>
 
-    <script language="javascript">
+    <script>
+		var ip_addr="https://192.168.10.110:8543";
+		var ip_server="https://192.168.10.110:8000";
+	
+        function checkready() {
+            $.ajax({
+                type: 'POST',
+                url: ip_server + '/checkready',
+                crossDomain: true,
+                xhrFields: {
+                    withCredentials: true
+                },
+                success: function (data) {
+                    readyroom = data;
+                }
+            });
+        };
+
         $(document).ready(function () {
             $.ajax({
-                url: 'https://192.168.10.110:8000/web/check',
+                url: ip_server+'/web/check',
                 type: 'GET',
                 async: false,
                 cache: false,
@@ -23,8 +40,10 @@
                 },
                 success: function (data) {
                     if (data.flag) {
-                        location.href = "https://192.168.10.110:8543/web/login/index.html";
+                        alert('로그인 해주세요');
+                        location.href = ip_addr+ "/web/login/index.html";
                     }
+                    checkready();
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
                     alert('Error connecting to the Node.js server... ' + textStatus + " " + errorThrown);
@@ -32,7 +51,6 @@
             });
         });
     </script>
-
 </head>
 <body>
     <section class="make-center" id="ssss">
@@ -41,7 +59,7 @@
             <img style="float: left !important; height: 80%; margin-top : 10px;margin-left: 10px" src="logo_image/Logo_beecast_blue.png">
 
             <a href="https://192.168.10.110:8000/web/logout">로그아웃</a><br>
-			<span id="minutes">00</span>:<span id="seconds">00</span>
+            <span id="minutes">00</span>:<span id="seconds">00</span>
         </div>
 
         <div class="room-wrap">
@@ -77,14 +95,6 @@
             </div>
             <div class="chat-output"></div>
         </div>
-
-        <form action="https://127.0.0.1:8000/web/Counselor" method="post" class="form-horizontal" id="submitbtn" style="display:none;">
-            <input type="text" id="startDate" name="startdate" style="display:none;">
-            <input type="text" id="endDate" name="enddate" style="display:none;">
-            <input type="text" id="roomid" name="roomid" style="display:none;">
-            <input type="text" id="user_id" name="user_id" style="display:none;">
-            <input type="submit" name="Submit" value="Insert" class="btn" style="display:none;">
-        </form>
     </section>
 
     <!-- list make -->
@@ -109,7 +119,9 @@
         var check_VideoAudio = false;
         var startDate = '';
         var endDate = '';
-		var callTime = '';
+        var callTime = '';
+        var fileName = '';
+        var readyroom;
 
         // ......................................................
         // ..................RTCMultiConnection Code.............
@@ -119,17 +131,16 @@
         var publicRoomsDiv = document.getElementById('room-table');
 
         document.getElementById("btn_disconnect").onclick = function () {
-            
-           window.location.reload();
-        }
-		//calling timer............................................................................................
-		var sec = 0;
 
-		function pad(val) {
-			return val > 9 ? val : "0" + val;
-		}
-	
-				
+            window.location.reload();
+        }
+        //calling timer............................................................................................
+        var sec = 0;
+
+        function pad(val) {
+            return val > 9 ? val : "0" + val;
+        }
+
 
         //file share===========================================
         document.getElementById('share-file').onclick = function () {
@@ -146,16 +157,19 @@
 
         var chatContainer = document.querySelector('.chat-output');
         function appendDIV(event) {
+
             var div = document.createElement('div');
             div.innerHTML = event.data || event;
             chatContainer.insertBefore(div, chatContainer.firstChild);
             div.tabIndex = 0;
             div.focus();
+
+
         }
         //file share===========================================
 
         // by default, socket.io server is assumed to be deployed on your own URL
-        connection.socketURL = 'https://192.168.10.110:8543/';
+        connection.socketURL = ip_addr+'/';
 
         // comment-out below line if you do not have your own socket.io server
         // connection.socketURL = 'https://rtcmulticonnection.herokuapp.com:443/';
@@ -251,13 +265,24 @@
 
             (function looper() {
                 var fir = document.createElement('tr');
-                fir.innerHTML = '<th> 지점 이름 </th> <th> 상담 상태 </th>';
+                fir.innerHTML = '<th> 지점 이름 </th> <th> 상담 상태 </th><th> 순서 </th>';
                 connection.getPublicModerators(function (array) {
+                    if (array.length != readyroom.length) {
+                        checkready();
+                    }
 
                     publicRoomsDiv.innerHTML = '';
                     array.forEach(function (moderator) {
 
                         if (moderator.userid == connection.userid) return; // if owner himself
+
+                        var first;
+                        readyroom.forEach(function (roomnum) {
+
+                            if (roomnum.store == decodeURI(moderator.userid)) {
+                                first = roomnum.RNUM;
+                            }
+                        });
 
                         var li = document.createElement('li');
                         li.innerHTML = '<b>' + moderator.userid + '</b>&nbsp;&nbsp;';
@@ -272,7 +297,10 @@
                             button.id = moderator.userid;
 
                             button.onclick = function () {
-                                startDate = new Date();
+                                var day = (new Date()).toLocaleDateString().replace('. ', '-').replace('. ', '-').substring(0, 9);
+                                var time = (new Date()).toLocaleTimeString().substring(3, 11);
+                                startDate = day + " " + time;
+
                                 this.disabled = true;
                                 myRoom = this.id;
                                 connection.join(this.id);
@@ -283,10 +311,11 @@
                                         state: 0
                                     });
                                 }, 1000);
-								call_timer = setInterval(function () {
-									document.getElementById("seconds").innerHTML = pad(++sec % 60);
-									document.getElementById("minutes").innerHTML = pad(parseInt(sec / 60, 10));
-								}, 1000);
+
+                                call_timer = setInterval(function () {
+                                    document.getElementById("seconds").innerHTML = pad(++sec % 60);
+                                    document.getElementById("minutes").innerHTML = pad(parseInt(sec / 60, 10));
+                                }, 1000);
                             };
                         }
 
@@ -296,12 +325,21 @@
                         mycurrent_row = document.createElement("tr");
                         mycurrent_cell = document.createElement("td");
                         mycurrent_cell2 = document.createElement("td");
+                        mycurrent_cell3 = document.createElement("td");
+
                         currenttext = document.createTextNode(decodeURI(moderator.userid));
                         mycurrent_cell.appendChild(currenttext);
                         mycurrent_cell2.appendChild(button);
 
+                        if (first == undefined) {
+                            first = '대기중';
+                        };
+
+                        currenttext2 = document.createTextNode(first);
+                        mycurrent_cell3.appendChild(currenttext2);
 
                         mytable.setAttribute("border", "1");
+                        mycurrent_row.insertBefore(mycurrent_cell3, mycurrent_row.firstChild);
                         mycurrent_row.insertBefore(mycurrent_cell2, mycurrent_row.firstChild);
                         mycurrent_row.insertBefore(mycurrent_cell, mycurrent_row.firstChild);
                         publicRoomsDiv.insertBefore(mycurrent_row, publicRoomsDiv.firstChild);
@@ -380,12 +418,16 @@
                     connection.send(f);
 
                     reader.readAsDataURL(f);
+
+                    fileName += f.name + "/";
+
                     e.preventDefault();
                 },
                 'dragover': function (e) {
                     e.preventDefault();
                 }
-            })
+            });
+
         });
 
         //---------------------------recorde--------------------------------------------//
@@ -404,43 +446,44 @@
 
         function endrecord() {
             var date = new Date();
-			endDate = new Date();
-			clearInterval(timers);
-			clearInterval(call_timer);
-			callTime = document.getElementById("minutes").textContent + ":" +document.getElementById("seconds").textContent;			
-			
-			alert(callTime);
+            var day = (new Date()).toLocaleDateString().replace('. ', '-').replace('. ', '-').substring(0, 9);
+            var time = (new Date()).toLocaleTimeString().substring(3, 11);
+            endDate = day + " " + time;
+            clearInterval(timers);
+            clearInterval(call_timer);
+            callTime = document.getElementById("minutes").textContent + ":" + document.getElementById("seconds").textContent;
+
+            recordRTC.stopRecording(function () {
+                var blob = new Blob([recordRTC.blob], {
+                    type: 'video/mp4'
+                });
+                invokeSaveAsDialog(blob, decodeURI(myRoom) + " 지점 " + date);
+            });
+
             $.ajax({
                 type: 'POST',
-                url: 'https://192.168.10.110:8000/web/Counselor',
+                url: ip_server+'/web/Counselor',
                 crossDomain: true,
-                data:
-                {
-                    "startdate": startDate,
-                    "enddate": endDate,
-                    "roomid": myRoom,
-					"calling_time" : callTime
-                },
                 xhrFields: {
                     withCredentials: true
+                },
+                data:
+                {
+                    "start_date": startDate,
+                    "end_date": endDate,
+                    "store": decodeURI(myRoom),
+                    "calling_time": callTime,
+                    "item": fileName
                 },
                 success: function (data) {
                     console.log(data);
                 },
                 error: function (error) {
-                    console.log("Error!" + error);
+                    console.log("Error!" + JSON.stringify(error));
                 },
 
-            });			
-			
-           
-			
-            recordRTC.stopRecording(function () {
-                var blob = new Blob([recordRTC.blob], {
-                    type: 'video/mp4'
-                });
-                invokeSaveAsDialog(blob, myRoom + " 지점 " + date);
             });
+            connection.closeSocket();
             window.location.reload();
         };
     </script>
